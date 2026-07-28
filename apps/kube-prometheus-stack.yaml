@@ -23,6 +23,13 @@ spec:
         global:
           rbac:
             pspEnabled: false
+        # Operator: keep off the Dell (GPU node) + drop the admission webhooks
+        # (their cert-gen jobs misbehave under ArgoCD; validation is optional for a homelab).
+        prometheusOperator:
+          nodeSelector:
+            node-role.kubernetes.io/worker: worker
+          admissionWebhooks:
+            enabled: false
         prometheus:
           prometheusSpec:
             retention: 14d
@@ -67,3 +74,5 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
