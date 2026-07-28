@@ -3,6 +3,8 @@ kind: IPAddressPool
 metadata:
   name: homelab-pool
   namespace: metallb-system
+  annotations:
+    homelab.dev/managed-by: argocd
 spec:
   addresses:
     - 192.168.1.240-192.168.1.249
