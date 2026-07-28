@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Local secrets / keys — NEVER commit
+*.key
+*.pem
+deploy-key*
+.secrets/
+
+# Local scratch
+*.local
