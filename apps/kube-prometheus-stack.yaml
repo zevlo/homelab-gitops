@@ -19,6 +19,11 @@ spec:
     chart: kube-prometheus-stack
     targetRevision: 87.21.0
     helm:
+      # CRDs are installed manually (kubectl --server-side) as a bootstrap step —
+      # ArgoCD's client-side apply overflows the 256KB annotation limit on these
+      # huge CRDs. skipCrds makes ArgoCD ignore them and manage only the chart's
+      # templates (Prometheus/Alertmanager CRs, Deployments, etc.).
+      skipCrds: true
       values: |
         global:
           rbac:
