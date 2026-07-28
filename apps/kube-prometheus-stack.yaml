@@ -1,0 +1,69 @@
+# kube-prometheus-stack — Prometheus + Grafana + Alertmanager + node-exporter + kube-state-metrics.
+# Helm chart repo is fetched directly by ArgoCD (no local `helm repo add` needed).
+# Values are inline because the app sources a *chart repo*, not a git path
+# (ArgoCD's valueFiles only works for git-sourced charts).
+# Loki datasource is added in Stage 4 after the Loki service endpoint is known.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 87.21.0
+    helm:
+      values: |
+        global:
+          rbac:
+            pspEnabled: false
+        prometheus:
+          prometheusSpec:
+            retention: 14d
+            nodeSelector:
+              node-role.kubernetes.io/worker: worker
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-path
+                  accessModes: ["ReadWriteOnce"]
+                  resources:
+                    requests:
+                      storage: 20Gi
+        alertmanager:
+          alertmanagerSpec:
+            nodeSelector:
+              node-role.kubernetes.io/worker: worker
+        grafana:
+          admin:
+            existingSecret: grafana-admin
+            existingSecretKey: admin-password
+          persistence:
+            enabled: true
+            size: 2Gi
+            storageClassName: local-path
+          nodeSelector:
+            node-role.kubernetes.io/worker: worker
+          service:
+            type: LoadBalancer
+        kube-state-metrics:
+          nodeSelector:
+            node-role.kubernetes.io/worker: worker
+        prometheus-node-exporter:
+          tolerations:
+            - operator: Exists
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
