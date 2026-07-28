@@ -64,6 +64,13 @@ spec:
             node-role.kubernetes.io/worker: worker
           service:
             type: LoadBalancer
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://loki.observability.svc.cluster.local:3100
+              jsonData:
+                maxLines: 1000
         kube-state-metrics:
           nodeSelector:
             node-role.kubernetes.io/worker: worker
