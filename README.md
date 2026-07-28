@@ -30,3 +30,38 @@ ArgoCD reads this private repo over SSH using a **GitHub deploy key** (read-only
 - Cluster changes get committed, not `kubectl apply`-ed ad hoc.
 - Secrets are Sealed Secrets — encrypted at rest in this repo via `kubeseal`.
 - Config/workload apps use auto-sync + self-heal; self-management apps (ArgoCD, sealed-secrets) use auto-sync only.
+
+## Current state (2026-07-28)
+
+| App | Path | Sync | Manages |
+|-----|------|------|---------|
+| `root` | `apps/` | auto-sync + self-heal | all child Applications (app-of-apps) |
+| `metallb-config` | `metallb/` | auto-sync + self-heal | IPAddressPool + L2Advertisement (adopted from Phase F) |
+
+Bootstrap layer (hand-installed, **not** Git-managed — Stage 5 deferred): ArgoCD v3.4.5, Sealed Secrets v0.38.4.
+
+### Making a change
+
+```bash
+# edit a manifest, e.g. metallb/pool.yaml
+git add -A && git commit -m "..." && git push
+# ArgoCD auto-syncs within ~3 min (natural poll); force a fetch with:
+argocd app get <app> --refresh
+```
+
+### Adding a new app
+
+1. Put manifests in a new top-level dir (e.g. `observability/`).
+2. Add `apps/<name>.yaml` — copy `apps/metallb-config.yaml`, change `name` + `path` + `destination.namespace`.
+3. Commit + push. `root` auto-creates the child app and syncs it.
+
+### Sealing a secret (run from the ops workstation)
+
+```bash
+kubeseal --format yaml < my-secret.yaml > <dir>/<name>.yaml   # controller cert fetched via kubeconfig
+git add <dir>/<name>.yaml && git commit -m "..." && git push
+```
+
+## Next
+
+Phase H (observability: kube-prometheus-stack + Loki + Alloy) lands here as a Helm-values-driven app under `helm/`. See [`cluster-build.md`](../dev/cluster-build.md) Phase H.
