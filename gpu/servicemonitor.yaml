@@ -1,0 +1,22 @@
+# Prometheus scrape for the GPU Operator's DCGM exporter.
+# `release: kube-prometheus-stack` matches the Prometheus ServiceMonitor selector;
+# the gpu-operator Service `nvidia-dcgm-exporter` is scraped on its `gpu-metrics` port.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nvidia-dcgm-exporter
+  namespace: gpu-operator
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: nvidia-dcgm-exporter
+  namespaceSelector:
+    matchNames:
+      - gpu-operator
+  endpoints:
+    - port: gpu-metrics
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s

@@ -1,0 +1,28 @@
+# GPU observability — ServiceMonitor (Prometheus scrape) + Grafana dashboard for the
+# DCGM exporter that the GPU Operator deployed. Raw-manifest app, mirrors metallb-config.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gpu-observability
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:zevlo/homelab-gitops.git
+    targetRevision: main
+    path: gpu
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gpu-operator
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
