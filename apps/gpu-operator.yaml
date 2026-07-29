@@ -1,0 +1,55 @@
+# GPU Operator — lifecycle-manages the GPU stack on the Dell (device-plugin, GFD,
+# DCGM-exporter, validator, container-toolkit/CDI config for k3s containerd).
+#
+# Driver stays host-managed (nvidia-driver-595-open on dell) → driver.enabled=false;
+# the operator's toolkit DaemonSet reconfigures k3s containerd to expose GPUs via CDI.
+#
+# Mirrors kube-prometheus-stack: chart-repo-sourced (inline values, since valueFiles
+# only works for git-sourced charts) + skipCrds (ClusterPolicy CRD is 144KB and
+# overflows client-side apply; bootstrapped once with `kubectl apply --server-side`).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gpu-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://helm.ngc.nvidia.com/nvidia
+    chart: gpu-operator
+    targetRevision: v26.3.3
+    helm:
+      skipCrds: true
+      values: |
+        driver:
+          enabled: false              # driver is host-managed on dell (595-open)
+        toolkit:
+          enabled: true
+          env:
+            # k3s bundles its own containerd at non-default paths; point the
+            # toolkit's `nvidia-ctk runtime configure` at them.
+            - name: CONTAINERD_CONFIG
+              value: /var/lib/rancher/k3s/agent/etc/containerd/config.toml
+            - name: CONTAINERD_SOCKET
+              value: /run/k3s/containerd/containerd.sock
+            - name: CONTAINERD_RUNTIME_CLASS
+              value: runc
+            - name: CONTAINERD_RUNTIME
+              value: runc
+        # devicePlugin / dcgmExporter / gfd / validator / migManager stay default-on.
+        # A2000 has no MIG → mig.strategy=single (default); migManager no-ops cleanly.
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gpu-operator
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
