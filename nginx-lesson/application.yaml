@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-lesson
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:zevlo/homelab-gitops.git
+    targetRevision: HEAD
+    path: nginx-lesson
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nginx-lesson
+  syncPolicy:
+    automated:
+      prune: true      # delete resources removed from Git
+      selfHeal: true   # undo manual drift, back to Git state
+    syncOptions:
+      - CreateNamespace=true
