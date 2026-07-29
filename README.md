@@ -38,13 +38,11 @@ ArgoCD reads this private repo over SSH using a **GitHub deploy key** (read-only
 | `root` | `apps/` | auto-sync + self-heal | all child Applications (app-of-apps) |
 | `metallb-config` | `metallb/` | auto-sync + self-heal | IPAddressPool + L2Advertisement (adopted from Phase F) |
 | `observability-secrets` | `observability/` | auto-sync + self-heal · wave −1 | sealed Grafana admin password |
-| `kube-prometheus-stack` | chart `prometheus-community/kube-prometheus-stack` 87.21.0 | auto-sync + self-heal · wave 0 | Prometheus + Grafana (.242) + Alertmanager + node-exporter + kube-state-metrics; Loki as a Grafana datasource |
-| `loki` | chart `grafana/loki` 7.1.0 | auto-sync + self-heal · wave 1 | Loki single-binary (filesystem, 7d retention) at `loki.observability.svc:3100` |
-| `alloy` | chart `grafana/alloy` 1.11.0 | auto-sync + self-heal · wave 1 | DaemonSet log shipper → Loki (all nodes) |
+| `kube-prometheus-stack` | chart `prometheus-community/kube-prometheus-stack` 87.21.0 | auto-sync + self-heal · wave 0 | Prometheus + Grafana (.242) + Alertmanager + node-exporter + kube-state-metrics |
 
 Bootstrap layer (hand-installed, **not** Git-managed — Stage 5 deferred): ArgoCD v3.4.5, Sealed Secrets v0.38.4, **and the kube-prometheus-stack CRDs** (`kubectl apply --server-side` once — ArgoCD can't apply them via client-side; `skipCrds: true` is set on the kps app).
 
-> **Grafana:** `http://192.168.1.242` · admin password = sealed `grafana-admin` secret. Datasources: Prometheus, Loki, Alertmanager.
+> **Grafana:** `http://192.168.1.242` · admin password = sealed `grafana-admin` secret. Datasources: Prometheus, Alertmanager.
 
 ### Making a change
 
@@ -70,4 +68,4 @@ git add <dir>/<name>.yaml && git commit -m "..." && git push
 
 ## Next
 
-Phase H (observability: kube-prometheus-stack + Loki + Alloy) lands here as a Helm-values-driven app under `helm/`. See [`cluster-build.md`](../dev/cluster-build.md) Phase H.
+Phase H (observability: kube-prometheus-stack) lands here as a Helm-values-driven app under `helm/`. See [`cluster-build.md`](../dev/cluster-build.md) Phase H.

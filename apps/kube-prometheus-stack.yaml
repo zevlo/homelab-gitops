@@ -2,7 +2,6 @@
 # Helm chart repo is fetched directly by ArgoCD (no local `helm repo add` needed).
 # Values are inline because the app sources a *chart repo*, not a git path
 # (ArgoCD's valueFiles only works for git-sourced charts).
-# Loki datasource is added in Stage 4 after the Loki service endpoint is known.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -64,13 +63,6 @@ spec:
             node-role.kubernetes.io/worker: worker
           service:
             type: LoadBalancer
-          additionalDataSources:
-            - name: Loki
-              type: loki
-              access: proxy
-              url: http://loki.observability.svc.cluster.local:3100
-              jsonData:
-                maxLines: 1000
         kube-state-metrics:
           nodeSelector:
             node-role.kubernetes.io/worker: worker
