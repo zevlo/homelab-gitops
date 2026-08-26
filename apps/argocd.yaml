@@ -1,0 +1,33 @@
+# ArgoCD self-management (Stage 5) — adopts the hand-installed v3.4.5.
+# Vendored from https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.5/manifests/install.yaml (non-HA).
+# Upgrades = commit a new pinned install.yaml, nothing else.
+#
+# selfHeal OFF: self-managing ArgoCD with self-heal is a known footgun
+# (sync fights itself while its own pods roll).
+# Rollback: `argocd app delete argocd --cascade=false`, then remove this file —
+# NEVER cascade-delete a running ArgoCD.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:zevlo/homelab-gitops.git
+    targetRevision: main
+    path: argocd
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
