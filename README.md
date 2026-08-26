@@ -24,7 +24,7 @@ Source of truth for a 4-node K3s homelab cluster (3 Proxmox VMs + 1 GPU bare-met
 | Vendored pinned manifests instead of Helm for the control plane | adoption was a provable zero-drift no-op; upgrades = swap in the new tag's file | no chart values conveniences |
 | `skipCrds: true` + one-time `kubectl apply --server-side` for kps/GPU-operator CRDs | several CRDs exceed ArgoCD's 256KB client-side apply annotation limit | CRDs bootstrapped outside Git |
 | Admission webhooks disabled on prometheus-operator | cert-gen jobs misbehave under ArgoCD; validation is optional at homelab scale | no admission-time rule validation |
-| Loki dropped after a trial | single-binary + retention + gateway complexity outweighed value at this scale | no log aggregation for now (roadmap) |
+| Loki dropped after a trial | single-binary + retention + gateway complexity outweighed value at this scale | no log aggregation |
 | Deploy key (read-only, repo-scoped) over a PAT | ArgoCD needs exactly one repo, nothing more | key rotation = manual bootstrap step |
 
 ## Cluster at a glance
@@ -52,8 +52,3 @@ ArgoCD can't manage its own first install, so a minimal manual layer bootstraps 
 | `metallb-config` | `metallb/` | 0 | IPAddressPool + L2Advertisement |
 | `gpu-operator` | chart v26.3.3 | 0 | NVIDIA GPU Operator (host driver, operator-managed toolkit) |
 | `gpu-observability` | `gpu/` | 1 | DCGM ServiceMonitor + Grafana dashboard |
-
-## What's next
-
-- Log aggregation — revisit with a simpler single-binary design
-- Time-sliced GPU sharing for multi-tenant workloads
