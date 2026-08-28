@@ -55,6 +55,22 @@ spec:
           admin:
             existingSecret: grafana-admin
             existingSecretKey: admin-password
+          grafana.ini:
+            server:
+              root_url: https://grafana.zachallen.io
+          # TLS via Traefik ingress + cert-manager; cert is issued automatically from
+          # the cluster-issuer annotation (cert-manager creates Certificate + secret grafana-tls).
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            hosts:
+              - grafana.zachallen.io
+            tls:
+              - secretName: grafana-tls
+                hosts:
+                  - grafana.zachallen.io
           persistence:
             enabled: true
             size: 2Gi
@@ -62,7 +78,7 @@ spec:
           nodeSelector:
             node-role.kubernetes.io/worker: worker
           service:
-            type: LoadBalancer
+            type: ClusterIP
         kube-state-metrics:
           nodeSelector:
             node-role.kubernetes.io/worker: worker

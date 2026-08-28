@@ -1,0 +1,35 @@
+# cert-manager — X.509 certificate automation (Let's Encrypt via ACME).
+# Helm chart fetched directly by ArgoCD, values inline — same pattern as kube-prometheus-stack.
+# Unlike kps, cert-manager's CRDs are each well under ArgoCD's 256KB annotation limit,
+# so they ship with the chart (crds.enabled) + ServerSideApply instead of skipCrds.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    targetRevision: v1.21.1
+    helm:
+      values: |
+        crds:
+          enabled: true
+        nodeSelector:
+          node-role.kubernetes.io/worker: worker
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

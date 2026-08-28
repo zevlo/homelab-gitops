@@ -1,0 +1,24 @@
+# cert-manager-config — Let's Encrypt ClusterIssuers (Cloudflare DNS-01) + sealed CF token.
+# Wave 1: depends on cert-manager CRDs from the wave-0 cert-manager app.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:zevlo/homelab-gitops.git
+    targetRevision: main
+    path: cert-manager-config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

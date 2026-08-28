@@ -11,6 +11,7 @@ Source of truth for a 4-node K3s homelab cluster (3 Proxmox VMs + 1 GPU bare-met
 ## What this demonstrates
 
 - **GitOps from the ground up** — app-of-apps pattern (`root` watches `apps/`, child apps own every layer), auto-sync + self-heal, ServerSideApply for large CRDs
+- **Automated PKI** — cert-manager + Let's Encrypt (Cloudflare DNS-01): internal services get publicly-trusted TLS with no internet exposure
 - **Self-managed control plane** — ArgoCD and Sealed Secrets reconcile their own existence from Git (adopted from hand-installed bootstrap via verified no-op diff)
 - **Mixed-source apps** — raw manifests, vendored upstream installs pinned by version, and Helm charts fetched directly from chart repos with inline values
 - **Secrets in a public repo** — Sealed Secrets: ciphertext in Git, decryption keys never leave the cluster
@@ -32,15 +33,16 @@ Source of truth for a 4-node K3s homelab cluster (3 Proxmox VMs + 1 GPU bare-met
 | | |
 |---|---|
 | Cluster | K3s v1.36 · 1 control-plane + 3 workers (2 Proxmox VMs + Dell bare-metal GPU node, RTX A2000) |
-| GitOps | ArgoCD v3.4.5 (non-HA), app-of-apps, 8 Applications |
-| Observability | kube-prometheus-stack 87.21.0 (Prometheus 14d retention, Grafana via LoadBalancer, Alertmanager) + NVIDIA DCGM exporter/ServiceMonitor/dashboard |
+| GitOps | ArgoCD v3.4.5 (non-HA), app-of-apps, 10 Applications |
+| Observability | kube-prometheus-stack 87.21.0 (Prometheus 14d retention, Grafana via Traefik ingress with TLS, Alertmanager) + NVIDIA DCGM exporter/ServiceMonitor/dashboard |
 | Load balancer | MetalLB L2 |
+| TLS | cert-manager v1.21.1 · Let's Encrypt via Cloudflare DNS-01 · Traefik ingress (K3s default) |
 
 ## Bootstrap & recovery
 
 ArgoCD can't manage its own first install, so a minimal manual layer bootstraps the loop: install ArgoCD once, apply the repo-access Secret (read-only GitHub deploy key — the one manifest deliberately not in Git) and [`apps/root.yaml`](apps/root.yaml). From then on `root` reconciles everything, including ArgoCD and Sealed Secrets themselves. kube-prometheus-stack CRDs are applied once with server-side apply (see design decisions). Disaster recovery is the same procedure — the cluster rebuilds from Git.
 
-## Current state (2026-08-26)
+## Current state (2026-08-27)
 
 | App | Source | Wave | Manages |
 |-----|--------|------|---------|
@@ -48,7 +50,9 @@ ArgoCD can't manage its own first install, so a minimal manual layer bootstraps 
 | `argocd` | `argocd/` (vendored v3.4.5) | −2 | ArgoCD itself |
 | `sealed-secrets` | `sealed-secrets/` (vendored v0.38.4) | −1 | Sealed Secrets controller |
 | `observability-secrets` | `observability/` | −1 | sealed Grafana admin password |
+| `cert-manager` | chart v1.21.1 | 0 | certificate automation (CRDs ship with chart) |
 | `kube-prometheus-stack` | chart 87.21.0 | 0 | Prometheus + Grafana + Alertmanager + node-exporter + kube-state-metrics |
 | `metallb-config` | `metallb/` | 0 | IPAddressPool + L2Advertisement |
 | `gpu-operator` | chart v26.3.3 | 0 | NVIDIA GPU Operator (host driver, operator-managed toolkit) |
+| `cert-manager-config` | `cert-manager-config/` | 1 | Let's Encrypt ClusterIssuers (Cloudflare DNS-01) + sealed CF API token |
 | `gpu-observability` | `gpu/` | 1 | DCGM ServiceMonitor + Grafana dashboard |

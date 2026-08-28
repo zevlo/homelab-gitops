@@ -1,0 +1,16 @@
+# Cloudflare API token for DNS-01 challenges — sealed to this name/namespace
+# (strict scope). Token permission: Zone → DNS → Edit on zachallen.io only.
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: cloudflare-api-token
+  namespace: cert-manager
+spec:
+  encryptedData:
+    api-token: AgB5VtHeIEyHk5+KIGeWgQ6kXSeo3qnBX0bSj0aAPcHVH4J9eYdL1rNrRzFQ7eCRTwc9qhwftQBCFFv49giN7MN0BLcDMLd7cojs0Ziz3+PtdFmC/3nQEwTL9c18qF1bDt1d7vPb+EjZ7RnHGSMA9HayjER/MExxcxZqgq0LlZwm28XgT1imDC0wnz7MTvQwPpFQ4MMALsE8XKIQwWeh48R/+IidB5eGg7bles+zcxy4csJkIxurK9lpdDor4pGWUTWpY7EpIWqb0EQ7lrzZIS/DCAU6MpemMtROEKrTXGUP/pNjkXRFtxhHgoDuuvaYnOYTLlet+FoGI5MEr/aMkGjIdQ8RkfkfGVYDdVbPGboECUHRYO7Ix7q6qnjRicWd9d85xM2Rvwg+e+sJKSoNvezMfnk4NKKfF36vxOGM5DhexNjoL7vrD4HEdNIjbvA/scQlnAsk5CaNagnpi+JnV/jSOW3LyS03okJIwf7LCBenm5kI5+NXswHEiJ1C0M6j1Q03H8+c46cg2YPTyPSPvJyOK3pCZEF1Cwd36gK3Banjqe8dAWOKkOztoSrK7rr/Awfqnb+07iPb1e7ti39GVjlMQB0hsoAoqZHILjVyqCUiYAQT5+7gwNmlq4bwFw5eIDENOXKeTHFY6igTYelo2208V4DmB0gMela5rCq4dgdLg0I33wIl3MvzWPeRkT9BMWqqXAbmf3Tsw/YgXRHF9Bgp2ccWVVYuqiVvY7WiREpqTpCyb4PSgaBSffUy9NSM3FeZjC4VCQ==
+  template:
+    metadata:
+      name: cloudflare-api-token
+      namespace: cert-manager
+    type: Opaque
